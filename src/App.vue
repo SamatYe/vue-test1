@@ -4,6 +4,7 @@ import axios from 'axios'
 import SkeletonLoader from './components/SkeletonLoader.vue'
 
 
+
 interface Item {
   id: number
   title: string
