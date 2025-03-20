@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import axios from 'axios'
+import SkeletonLoader from './components/SkeletonLoader.vue'
+
 
 interface Item {
   id: number
@@ -13,6 +15,7 @@ const items = ref<Item[]>([])
 const cart = ref<Item[]>([])
 const isCartOpen = ref(false)
 const selectedItem = ref<Item | null>(null)
+const loading = ref(true) // <-- добавили loading
 
 onMounted(async () => {
   try {
@@ -20,6 +23,8 @@ onMounted(async () => {
     items.value = response.data
   } catch (error) {
     console.error('Ошибка при загрузке товаров:', error)
+  } finally {
+    loading.value = false // <-- после загрузки убираем loading
   }
 
   const savedCart = localStorage.getItem('cart')
@@ -54,6 +59,7 @@ function closeItemDetails() {
   selectedItem.value = null
 }
 </script>
+
 
 <template>
   <div class="app">
