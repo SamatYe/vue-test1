@@ -1,3 +1,60 @@
+<script setup lang="ts">
+import { ref, onMounted, watch } from 'vue'
+import axios from 'axios'
+
+interface Item {
+  id: number
+  title: string
+  price: number
+  imageUrl: string
+}
+
+const items = ref<Item[]>([])
+const cart = ref<Item[]>([])
+const isCartOpen = ref(false)
+const selectedItem = ref<Item | null>(null)
+
+onMounted(async () => {
+  try {
+    const response = await axios.get('https://35c7fb3b6b9ec247.mokky.dev/items')
+    items.value = response.data
+  } catch (error) {
+    console.error('Ошибка при загрузке товаров:', error)
+  }
+
+  const savedCart = localStorage.getItem('cart')
+  if (savedCart) {
+    cart.value = JSON.parse(savedCart)
+  }
+})
+
+watch(cart, (newCart) => {
+  localStorage.setItem('cart', JSON.stringify(newCart))
+}, { deep: true })
+
+function toggleCart() {
+  isCartOpen.value = !isCartOpen.value
+}
+
+function addToCart(item: Item) {
+  if (!cart.value.some((i) => i.id === item.id)) {
+    cart.value.push(item)
+  }
+}
+
+function removeFromCart(id: number) {
+  cart.value = cart.value.filter(item => item.id !== id)
+}
+
+function openItemDetails(item: Item) {
+  selectedItem.value = item
+}
+
+function closeItemDetails() {
+  selectedItem.value = null
+}
+</script>
+
 <template>
   <div class="app">
     <header class="app__header">
@@ -15,31 +72,24 @@
           class="product-card"
           @click="openItemDetails(item)"
         >
-          <SkeletonLoader
-            v-if="loading"
-            type="image"
-            style="width: 150px; height: 150px; border-radius: 8px;"
-          />
           <img
-            v-else
+            v-if="!loading"
             :src="item.imageUrl"
             :alt="item.title"
             class="product-card__img"
           />
+          <SkeletonLoader
+            v-else
+            width="150px"
+            height="150px"
+            borderRadius="8px"
+          />
           <h3 class="product-card__title">
-            <SkeletonLoader
-              v-if="loading"
-              type="text"
-              style="width: 80%; height: 20px;"
-            />
+            <SkeletonLoader v-if="loading" width="80%" height="20px" />
             <span v-else>{{ item.title }}</span>
           </h3>
           <p class="product-card__price">
-            <SkeletonLoader
-              v-if="loading"
-              type="text"
-              style="width: 60%; height: 20px;"
-            />
+            <SkeletonLoader v-if="loading" width="60%" height="20px" />
             <span v-else>{{ item.price }}₸</span>
           </p>
           <button
@@ -51,8 +101,9 @@
           </button>
           <SkeletonLoader
             v-else
-            type="button"
-            style="width: 100%; height: 36px; border-radius: 4px;"
+            width="100%"
+            height="36px"
+            borderRadius="4px"
           />
         </div>
       </div>
@@ -63,22 +114,12 @@
       <h2 class="cart__title">Корзина</h2>
       <div v-if="cart.length === 0" class="cart__empty">Корзина пуста</div>
       <div v-else class="cart__items">
-        <div
-          v-for="item in cart"
-          :key="item.id"
-          class="cart-item"
-          @click="openItemDetails(item)"
-        >
+        <div v-for="item in cart" :key="item.id" class="cart-item" @click="openItemDetails(item)">
           <img :src="item.imageUrl" class="cart-item__img" />
           <div class="cart-item__details">
             <h3 class="cart-item__title">{{ item.title }}</h3>
             <p class="cart-item__price">{{ item.price }}₸</p>
-            <button
-              class="cart-item__remove"
-              @click.stop="removeFromCart(item.id)"
-            >
-              Удалить
-            </button>
+            <button class="cart-item__remove" @click.stop="removeFromCart(item.id)">Удалить</button>
           </div>
         </div>
       </div>
@@ -91,12 +132,7 @@
         <img :src="selectedItem.imageUrl" class="details__img" />
         <h3 class="details__title">{{ selectedItem.title }}</h3>
         <p class="details__price">{{ selectedItem.price }}₸</p>
-        <button
-          class="details__remove"
-          @click="removeFromCart(selectedItem.id)"
-        >
-          Удалить
-        </button>
+        <button class="details__remove" @click="removeFromCart(selectedItem.id)">Удалить</button>
         <button class="details__close" @click="closeItemDetails">Закрыть</button>
       </div>
     </div>
@@ -121,7 +157,7 @@
   font-size: 24px;
 }
 .app__cart-btn {
-  background: #4caf40;
+  background: #4CAF40;
   color: white;
   border: none;
   padding: 10px 20px;
@@ -140,7 +176,7 @@
   width: 200px;
   text-align: center;
   border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   cursor: pointer;
 }
 .product-card__img {
@@ -156,7 +192,7 @@
   color: #000;
 }
 .product-card__btn {
-  background: #4caf50;
+  background: #4CAF50;
   color: #fff;
   border: none;
   margin-top: 10px;
@@ -173,7 +209,7 @@
   height: 100%;
   background: #fff;
   padding: 20px;
-  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+  box-shadow: -2px 0 5px rgba(0,0,0,0.2);
   transition: right 0.4s ease;
   overflow-y: auto;
   z-index: 1000;
@@ -219,6 +255,67 @@
   color: #000;
 }
 .cart-item__remove {
-  background: #
-  ::contentReference[oaicite:0]{index=0}
-
+  background: #ff4c4c;
+  border: none;
+  padding: 5px 10px;
+  margin-top: 5px;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.cart__close {
+  margin-top: 20px;
+  background: #333;
+  color: white;
+  border: none;
+  padding: 10px;
+  width: 100%;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1100;
+}
+.details {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 300px;
+  text-align: center;
+}
+.details__img {
+  width: 100%;
+  object-fit: cover;
+}
+.details__title {
+  color: #000;
+}
+.details__price {
+  color: #000;
+}
+.details__remove {
+  background: #ff4c4c;
+  border: none;
+  padding: 8px 16px;
+  margin-top: 10px;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.details__close {
+  margin-top: 10px;
+  background: #333;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+</style>
